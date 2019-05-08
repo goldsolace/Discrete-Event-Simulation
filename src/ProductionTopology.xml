@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<ProductionLine>
+
+  <ProductionStage>
+    <Name>S0</Name>
+    <Successors>
+      <Stage>S1</Stage>
+    </Successors>
+    <Output>Q01</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S1</Name>
+    <Predecessors>
+      <Stage>S0</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S2a</Stage>
+      <Stage>S2b</Stage>
+    </Successors>
+    <Input>Q01</Input>
+    <Output>Q12</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S2a</Name>
+    <Predecessors>
+      <Stage>S1</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S3</Stage>
+    </Successors>
+    <Input>Q12</Input>
+    <Output>Q23</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S2b</Name>
+    <Predecessors>
+      <Stage>S1</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S3</Stage>
+    </Successors>
+    <Input>Q12</Input>
+    <Output>Q23</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S3</Name>
+    <Predecessors>
+      <Stage>S2a</Stage>
+      <Stage>S2b</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S4a</Stage>
+      <Stage>S4b</Stage>
+    </Successors>
+    <Input>Q23</Input>
+    <Output>Q34</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S4a</Name>
+    <Predecessors>
+      <Stage>S3</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S5</Stage>
+    </Successors>
+    <Input>Q34</Input>
+    <Output>Q45</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S4b</Name>
+    <Predecessors>
+      <Stage>S3</Stage>
+    </Predecessors>
+    <Successors>
+      <Stage>S5</Stage>
+    </Successors>
+    <Input>Q34</Input>
+    <Output>Q45</Output>
+  </ProductionStage>
+
+  <ProductionStage>
+    <Name>S5</Name>
+    <Predecessors>
+      <Stage>S4a</Stage>
+      <Stage>S4b</Stage>
+    </Predecessors>
+    <Input>Q45</Input>
+  </ProductionStage>
+
+  <!--<ProductionStage>-->
+    <!--<Name>R0</Name>-->
+    <!--<Successors>-->
+      <!--<Stage>S1</Stage>-->
+    <!--</Successors>-->
+    <!--<Output>Q01</Output>-->
+  <!--</ProductionStage>-->
+
+  <!--<ProductionStage>-->
+    <!--<Name>T1</Name>-->
+    <!--<Successors>-->
+      <!--<Stage>T2</Stage>-->
+    <!--</Successors>-->
+    <!--<Output>QT12</Output>-->
+  <!--</ProductionStage>-->
+
+  <!--<ProductionStage>-->
+    <!--<Name>T2</Name>-->
+    <!--<Predecessors>-->
+      <!--<Stage>T1</Stage>-->
+    <!--</Predecessors>-->
+    <!--<Successors>-->
+      <!--<Stage>S3</Stage>-->
+    <!--</Successors>-->
+    <!--<Input>QT12</Input>-->
+    <!--<Output>QT2S3</Output>-->
+  <!--</ProductionStage>-->
+
+</ProductionLine>
