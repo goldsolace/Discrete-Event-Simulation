@@ -24,15 +24,14 @@ public class PA3 {
         }
 
         try {
+
+
             double M = Double.parseDouble(args[0]);
             double N = Double.parseDouble(args[1]);
             int Qmax = Integer.parseInt(args[2]);
 
             ProductionLine productionLine = new ProductionLine(M, N, Qmax).buildFromFile("src/ProductionTopology.xml");
             productionLine.startProduction();
-            productionLine.printProductionLine();
-
-            System.out.println();
         } catch (NumberFormatException | ParserConfigurationException | IOException | SAXException e) {
             e.printStackTrace();
         }

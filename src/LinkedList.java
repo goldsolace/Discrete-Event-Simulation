@@ -11,7 +11,7 @@ import java.util.NoSuchElementException;
  * @lastModified: 03-05-2019
  */
 
-public class LinkedList<E extends PlanarShape> implements Iterable<E> {
+public class LinkedList<E> implements Iterable<E> {
 
     private Node<E> sentinel;
     private int size = 0;

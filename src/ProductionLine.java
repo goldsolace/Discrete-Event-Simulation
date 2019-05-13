@@ -14,26 +14,83 @@ public class ProductionLine {
 
     private final double MAX_TIME = 10000000;
 
-    private final double M;
-    private final double N;
-    private final int QMAX;
+    private double M;
+    private double N;
+    private int QMAX;
+    private Random r;
 
-    private Set<ProductionStage> stages = new LinkedHashSet<>();
-    private Set<InterStageStorage> storages = new LinkedHashSet<>();
+    private EventScheduler eventScheduler;
 
-    private double time;
+    private Set<ProductionStage> stages;
+    private Set<InterStageStorage> storages;
+    private List<Item> stock;
 
-    public ProductionLine(double m, double n, int qMax) {
-        M = m;
-        N = n;
+    public ProductionLine(double mean, double range, int qMax) {
+        M = mean;
+        N = range;
         QMAX = qMax;
-        time = 0;
+        r = new Random(5);
+        eventScheduler = null;
+        stages = new LinkedHashSet<>();
+        storages = new LinkedHashSet<>();
+        stock = new ArrayList<>();
     }
 
-    public void startProduction() {
-        while (time < MAX_TIME) {
+    private double generateDuration(int multiplier) {
+        return M * multiplier + (N * multiplier * (r.nextDouble() - 0.5));
+    }
+    static int block = 0;
 
+    public void startProduction() {
+        System.out.println(stages.size() + " " + storages.size());
+        eventScheduler = new EventScheduler(stages.size());
+        Clock clock = eventScheduler.getClock();
+        while (clock.getTime() < MAX_TIME) {
+            if (eventScheduler.canSchedule())
+            for (ProductionStage stage : stages) {
+                Item item = stage.consume();
+                if (item != null) {
+                    //System.out.println(stage + " - PROCESSING");
+                    eventScheduler.schedule(new TimeEvent(stage, item, generateDuration(stage.getParallelism())));
+                    //System.out.println("Item["+item.getId()+"] - SCHEDULED");
+                }
+            }
+            if (eventScheduler.canExecute()) {
+                TimeEvent timeEvent = eventScheduler.execute();
+                ProductionStage stage = timeEvent.getStage();
+                //System.out.println("Item["+timeEvent.getItem().getId()+"] - FINISHED "+timeEvent.getStage());
+                if (stage.getOutput() == null) {
+                    stage.updateState(ProductionStage.State.IDLE);
+                    //System.out.println("Item["+timeEvent.getItem().getId()+"] ---- COMPLETED");
+                } else if (stage.getOutput().isFull()) {
+                    block++;
+                    stage.updateState(ProductionStage.State.BLOCKED);
+                    if (block > 2)
+                    System.out.println("BLOCKED ---- " + timeEvent);
+                    eventScheduler.extend(timeEvent);
+                    if (block > 2) {
+                    printStatus();
+                    return; }
+                } else {
+                    block = 0;
+                    stage.produce(timeEvent.getItem());
+                    //System.out.println(clock.getTime() + " Finish");
+                }
+
+            }
         }
+        System.out.println(stock.size() + " Time "+clock.getTime());
+    }
+
+    public void printStatus() {
+        System.out.println("======== STATUS ========");
+        for (ProductionStage s : stages) {
+            System.out.println(s);
+        }
+        for (InterStageStorage s : storages) {
+            System.out.println(s);
+        }
+        eventScheduler.printStatus();
     }
 
     /**
@@ -98,6 +155,9 @@ public class ProductionLine {
                     if (storage == null) continue;
                     storages.add(storage);
                     productionStage.setInput(storage);
+                } else {
+                    // All stages except beginning
+                    productionStage.updateState(ProductionStage.State.IDLE);
                 }
 
                 NodeList output = stage.getElementsByTagName("Output");
@@ -115,7 +175,7 @@ public class ProductionLine {
     }
 
     private ProductionStage getStage(Map<String, ProductionUnit> map, String name) {
-        ProductionUnit unit = map.computeIfAbsent(name, p -> new ProductionStage(name));
+        ProductionUnit unit = map.computeIfAbsent(name, p -> new ProductionStage(name, M, N));
         if (unit instanceof ProductionStage) return (ProductionStage) unit;
         return null;
     }
@@ -152,7 +212,7 @@ public class ProductionLine {
 //                sb.append(s.getOutput()+"\n");
 //            sb.append("\n");
 //        }
-        System.out.println(sb.toString());
+        //System.out.println(sb.toString());
     }
 
 

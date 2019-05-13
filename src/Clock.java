@@ -1,13 +1,8 @@
-import java.util.Queue;
-import java.util.concurrent.PriorityBlockingQueue;
-
 public class Clock {
     private double time;
-    private Queue<TimeEvent> timeEventQueue;
 
-    public Clock(int maxEvents) {
+    public Clock() {
         time = 0;
-        timeEventQueue = new PriorityBlockingQueue<>(maxEvents);
     }
 
     public void tick(double amount) {

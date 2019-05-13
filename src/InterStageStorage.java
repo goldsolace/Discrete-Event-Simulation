@@ -1,4 +1,3 @@
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -13,10 +12,30 @@ public class InterStageStorage implements ProductionUnit {
 
     private String name;
     private ArrayBlockingQueue<Item> itemQueue;
+    private int in;
+    private int out;
 
     public InterStageStorage(String name, int qMax) {
         this.name = name;
         itemQueue = new ArrayBlockingQueue<>(qMax);
+        in = 0;
+        out = 0;
+    }
+
+    public int getConnections(boolean isInput) {
+        return isInput ? out : in;
+    }
+
+    public InterStageStorage connect(boolean isInput) {
+        // Output of storage is used for input
+        if (isInput) out++;
+        else in++;
+        return this;
+    }
+
+    public void disconnect(boolean isInput) {
+        if (isInput) out--;
+        else in--;
     }
 
     public boolean isFull() {
@@ -45,6 +64,6 @@ public class InterStageStorage implements ProductionUnit {
      */
     @Override
     public String toString() {
-        return getName();
+        return "Storage[" + name + "] - Capatity = " + itemQueue.size() + "/" + (itemQueue.size()+itemQueue.remainingCapacity());
     }
 }
