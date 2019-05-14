@@ -1,3 +1,5 @@
+import java.util.HashMap;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ArrayBlockingQueue;
 
 /**
@@ -14,12 +16,18 @@ public class InterStageStorage implements ProductionUnit {
     private ArrayBlockingQueue<Item> itemQueue;
     private int in;
     private int out;
+    private double cumulativeTime;
+    private double cumulativeItems;
+    private double cumulativeOperations;
+    private HashMap<Item, Double> timer;
 
     public InterStageStorage(String name, int qMax) {
         this.name = name;
         itemQueue = new ArrayBlockingQueue<>(qMax);
         in = 0;
         out = 0;
+        cumulativeTime = 0;
+        timer = new HashMap<>();
     }
 
     public int getConnections(boolean isInput) {
@@ -46,12 +54,33 @@ public class InterStageStorage implements ProductionUnit {
         return itemQueue.isEmpty();
     }
 
-    public Item poll() {
-        return itemQueue.poll();
+    public Item poll(double time) {
+        if (isEmpty()) throw new NoSuchElementException("Storage is empty");
+        Item item = itemQueue.poll();
+        cumulativeTime += timer.getOrDefault(item, 0D);
+        timer.remove(item);
+        cumulativeItems += itemQueue.size();
+        cumulativeOperations++;
+        return item;
     }
 
-    public boolean offer(Item item) {
-        return itemQueue.offer(item);
+    public boolean offer(Item item, double time) {
+        if (isFull()) throw new IllegalStateException("Storage is full");
+        timer.put(item, time);
+        itemQueue.offer(item);
+        cumulativeItems += itemQueue.size();
+        cumulativeOperations++;
+        return true;
+    }
+
+    public double getCumulativeTime() {
+        return cumulativeTime;
+    }
+
+    public double getAverageItems() {
+        System.out.println(cumulativeItems);
+        System.out.println(cumulativeOperations);
+        return cumulativeItems / cumulativeOperations;
     }
 
     @Override

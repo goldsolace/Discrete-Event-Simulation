@@ -33,4 +33,17 @@ public class Item {
     }
 
     public List<TimeEvent> getTimeEvents() { return timeEvents; }
+
+    public boolean addTimeEvent(TimeEvent timeEvent) { return timeEvents.add(timeEvent); }
+
+    public String getPath() {
+        StringBuilder sb = new StringBuilder();
+        for (TimeEvent timeEvent : timeEvents) {
+            sb.append(timeEvent.getStage().getName());
+            if (timeEvent.getExitTime() != timeEvent.getItem().exitTime) {
+                sb.append(" -> ");
+            }
+        }
+        return sb.toString();
+    }
 }

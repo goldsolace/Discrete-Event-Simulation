@@ -1,11 +1,11 @@
-import java.util.concurrent.PriorityBlockingQueue;
-
 public class EventScheduler {
 
+    private double maxTime;
     private Clock clock;
     private BoundedPriorityQueue<TimeEvent> timeEventQueue;
 
-    public EventScheduler(int maxEvents) {
+    public EventScheduler(double maxTime, int maxEvents) {
+        this.maxTime = maxTime;
         clock = new Clock();
         timeEventQueue = new BoundedPriorityQueue<>(maxEvents);
     }
@@ -15,8 +15,9 @@ public class EventScheduler {
     }
 
     public void schedule(TimeEvent timeEvent) {
+        System.out.println(timeEventQueue.size());
         if (timeEventQueue.isFull()) throw new IllegalStateException();
-            timeEventQueue.offer(timeEvent);
+        timeEventQueue.offer(timeEvent);
     }
 
     public boolean canExecute() {
@@ -29,29 +30,30 @@ public class EventScheduler {
 
     public TimeEvent execute() {
         if (timeEventQueue.isEmpty()) throw new IllegalStateException();
-        double duration = timeEventQueue.peek().getRemaining();
+        double duration = Math.min(maxTime - clock.getTime(), timeEventQueue.peek().getRemaining());
         clock.tick(duration);
         for (TimeEvent timeEvent : timeEventQueue)
             timeEvent.elapse(duration);
         return timeEventQueue.poll();
     }
 
+    public void block(TimeEvent timeEvent) {
+        double extendBy = Double.POSITIVE_INFINITY;
+        if (timeEvent.getStage().getParallelism() > 1)
+            for (TimeEvent e : timeEventQueue) {
+                if (e.getStage().getInput() == timeEvent.getStage().getOutput()) {
+                    extendBy = Math.min(extendBy, e.getRemaining());
+                }
+            }
+        else
+            if (canExecute())
+                extendBy = timeEventQueue.peek().getRemaining();
+        timeEvent.extend(extendBy);
+        schedule(timeEvent);
+    }
+
     public void printStatus() {
         for (TimeEvent e : timeEventQueue)
             System.out.println(e);
-    }
-
-    public void extend(TimeEvent timeEvent) {
-        double min = Double.POSITIVE_INFINITY;
-        for (TimeEvent e : timeEventQueue) {
-            if (e.getStage().getInput() == timeEvent.getStage().getOutput()) {
-                //if (ProductionLine.block > 2) System.out.println(e);
-                min = Math.min(min, e.getRemaining());
-            }
-        }
-        timeEvent.extend(min);
-        //if (!timeEventQueue.isEmpty())
-            //timeEvent.extend(timeEventQueue.peek().getRemaining());
-        schedule(timeEvent);
     }
 }
