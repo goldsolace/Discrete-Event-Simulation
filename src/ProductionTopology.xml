@@ -94,33 +94,32 @@
   </ProductionStage>
 
 
+  <!--<ProductionStage>-->
+    <!--<Name>R0</Name>-->
+    <!--<Successors>-->
+      <!--<Stage>S1</Stage>-->
+    <!--</Successors>-->
+    <!--<Output>Q01</Output>-->
+  <!--</ProductionStage>-->
 
-  <ProductionStage>
-    <Name>R0</Name>
-    <Successors>
-      <Stage>S1</Stage>
-    </Successors>
-    <Output>Q01</Output>
-  </ProductionStage>
+  <!--<ProductionStage>-->
+    <!--<Name>T1</Name>-->
+    <!--<Successors>-->
+      <!--<Stage>T2</Stage>-->
+    <!--</Successors>-->
+    <!--<Output>QT12</Output>-->
+  <!--</ProductionStage>-->
 
-  <ProductionStage>
-    <Name>T1</Name>
-    <Successors>
-      <Stage>T2</Stage>
-    </Successors>
-    <Output>QT12</Output>
-  </ProductionStage>
-
-  <ProductionStage>
-    <Name>T2</Name>
-    <Predecessors>
-      <Stage>T1</Stage>
-    </Predecessors>
-    <Successors>
-      <Stage>S3</Stage>
-    </Successors>
-    <Input>QT12</Input>
-    <Output>QT2S3</Output>
-  </ProductionStage>
+  <!--<ProductionStage>-->
+    <!--<Name>T2</Name>-->
+    <!--<Predecessors>-->
+      <!--<Stage>T1</Stage>-->
+    <!--</Predecessors>-->
+    <!--<Successors>-->
+      <!--<Stage>S3</Stage>-->
+    <!--</Successors>-->
+    <!--<Input>QT12</Input>-->
+    <!--<Output>QT2S3</Output>-->
+  <!--</ProductionStage>-->
 
 </ProductionLine>

@@ -78,8 +78,8 @@ public class InterStageStorage implements ProductionUnit {
     }
 
     public double getAverageItems() {
-        System.out.println(cumulativeItems);
-        System.out.println(cumulativeOperations);
+        //System.out.println(cumulativeItems);
+        //System.out.println(cumulativeOperations);
         return cumulativeItems / cumulativeOperations;
     }
 

@@ -5,7 +5,7 @@ import java.io.IOException;
 
 /**
  * Programming Assignment 3 Main Class
- *
+ * <p>
  * Reads in a file of polygons, stores them in a list, then stores them in a sorted list
  * and outputs both lists.
  *
@@ -29,6 +29,7 @@ public class PA3 {
             int Qmax = Integer.parseInt(args[2]);
 
             ProductionLine productionLine = new ProductionLine(M, N, Qmax).buildFromFile("src/ProductionTopology.xml");
+            productionLine.printProductionLine();
             productionLine.startProduction();
             productionLine.printStatistics();
         } catch (NumberFormatException | ParserConfigurationException | IOException | SAXException e) {

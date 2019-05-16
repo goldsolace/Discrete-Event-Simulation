@@ -12,7 +12,7 @@ import java.util.*;
 
 public class ProductionLine {
 
-    private final double MAX_TIME = 10000000;// - 9900000;
+    private final double MAX_TIME = 10000000 - 9991000;
 
     private double M;
     private double N;
@@ -37,80 +37,88 @@ public class ProductionLine {
     }
 
     private double generateDuration(int multiplier) {
-        //if (true) return 1000;
+        if (true) return 1000;
         return M * multiplier + (N * multiplier * (r.nextDouble() - 0.5));
     }
     static int block = 0;
 
     public void startProduction() {
         System.out.println("START PRODUCTION");
-        System.out.println(stages.size());
+
         eventScheduler = new EventScheduler(MAX_TIME, stages.size());
-        Clock clock = eventScheduler.getClock();
+        Clock clock = eventScheduler.clock();
         while (clock.getTime() < MAX_TIME) {
+            scheduleProduction();
+            executeProduction();
 
-            if (eventScheduler.canSchedule()) {
-                printStatus("SCHEDULE");
-                for (ProductionStage stage : stages) {
-                    Item item = stage.consume(clock.getTime());
-                    if (item != null) {
-                        //System.out.println(stage + " - PROCESSING");
-                        try {
-                            eventScheduler.schedule(new TimeEvent(stage, item, clock.getTime(), generateDuration(stage.getParallelism())));
-                        }catch (Exception e) {
-                            printStatus("THROW");
-                            throw e;
-                        }
-                        //System.out.println("Item["+item.getId()+"] - SCHEDULED");
-                    }
-                }
-            }
-
-            if (eventScheduler.canExecute()) {
-                TimeEvent timeEvent = eventScheduler.execute();
-                printStatus("EXECUTE");
-                if (timeEvent.getRemaining() > 0) {
-                    eventScheduler.schedule(timeEvent);
-                    continue;
-                }
-
-                timeEvent.setExitTime(clock.getTime());
-                ProductionStage stage = timeEvent.getStage();
-
-                //System.out.println("Item["+timeEvent.getItem().getId()+"] - FINISHED "+timeEvent.getStage());
-                if (stage.getOutput() == null) {
-                    //System.out.println("Item["+timeEvent.getItem().getId()+"] ---- COMPLETED");
-                    stage.updateState(ProductionStage.State.IDLE, clock.getTime());
-                    timeEvent.getItem().setExitTime(clock.getTime());
-                    stock.add(timeEvent.getItem());
-                } else if (stage.getOutput().isFull()) {
-                    block++;
-                    stage.updateState(ProductionStage.State.BLOCKED, clock.getTime());
-                    System.out.println("BLOCKED ---- " + timeEvent);
-                    eventScheduler.block(timeEvent);
-                    if (block > 10) {
-                        printStatus("THROW");
-                        return;
-                    }
-                    printStatus("BLOCKED");
-                } else {
-                    block = 0;
-                    stage.produce(timeEvent.getItem(), clock.getTime());
-                    //System.out.println(clock.getTime() + " Finish");
-                }
-                printStatus("LOOP");
+            try {
+                Thread.sleep(1L);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
             }
         }
 
+        // Clear Stages
         for (ProductionStage stage : stages) {
             stage.updateState(ProductionStage.State.IDLE, clock.getTime());
         }
         printStatus("COMPLETE PRODUCTION");
+        System.out.println("Time: "+clock.getTime());
         System.out.println("Stock: "+stock.size());
     }
 
+    private void scheduleProduction() {
+        Clock clock = eventScheduler.clock();
+        if (eventScheduler.canSchedule()) {
+            printStatus("SCHEDULE");
+            for (ProductionStage stage : stages) {
+                Item item = stage.consume(clock.getTime());
+                if (item != null) {
+                    eventScheduler.schedule(new TimeEvent(stage, item, clock.getTime(), generateDuration(stage.getParallelism())));
+                }
+            }
+        }
+    }
+
+    private void executeProduction() {
+        Clock clock = eventScheduler.clock();
+        if (eventScheduler.canExecute()) {
+            // Execute production item in next scheduled event
+            TimeEvent timeEvent = eventScheduler.execute();
+            printStatus("EXECUTE");
+
+            // Item hasn't finished production
+            if (timeEvent.getRemaining() > 0) {
+                eventScheduler.schedule(timeEvent);
+                return;
+            }
+
+            timeEvent.setExitTime(clock.getTime());
+            ProductionStage stage = timeEvent.getStage();
+
+            // Item has been completed.
+            if (stage.getOutput() == null) {
+                stage.updateState(ProductionStage.State.IDLE, clock.getTime());
+                timeEvent.getItem().setExitTime(clock.getTime());
+                stock.add(timeEvent.getItem());
+            // Item has finished
+            } else if (stage.getOutput().isFull()) {
+                stage.updateState(ProductionStage.State.BLOCKED, clock.getTime());
+                eventScheduler.block(timeEvent);
+                block++;
+                if (block > 10) {
+                    throw new IllegalStateException(getStatus());
+                }
+            // Item finished processing in stage
+            } else {
+                block = 0;
+                stage.produce(clock.getTime());
+            }
+        }
+    }
+
     public void printStatus(String status) {
-        if (!status.equals("THROW")) return;
+        //if (!status.equals("THROW1")) return;
         System.out.println("======== "+status+" STATUS ========");
         for (ProductionStage s : stages) {
             System.out.println(s);
@@ -120,6 +128,19 @@ public class ProductionLine {
         }
         System.out.println("Scheduled:");
         eventScheduler.printStatus();
+    }
+
+    public String getStatus() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("\n======== STATUS ========\n");
+        for (ProductionStage s : stages) {
+            sb.append(s).append("\n");
+        }
+        for (InterStageStorage s : storages) {
+            sb.append(s).append("\n");
+        }
+        sb.append(eventScheduler.getStatus());
+        return sb.toString();
     }
 
     /**
@@ -255,7 +276,7 @@ public class ProductionLine {
                 if (key == ProductionStage.State.IDLE) continue;
                 double time = stage.getStateStats().getOrDefault(key, 0D);
                 total += time;
-                sb.append(key).append(" = ").append(String.format("%.2f", (time / MAX_TIME) * 100D)).append("\n");
+                sb.append(key).append(" = ").append(time).append(String.format(" [%.2f%%]", (time / MAX_TIME) * 100D)).append("\n");
             }
             //System.out.println(total);
         }

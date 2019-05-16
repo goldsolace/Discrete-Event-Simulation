@@ -14,13 +14,14 @@ import java.util.Map;
 public class ProductionStage implements ProductionUnit {
 
     private String name;
-    private double stateTime;
-    private State state;
-    private Map<State, Double> stateStats;
     private List<ProductionStage> predecessors;
     private List<ProductionStage> successors;
     private InterStageStorage input;
     private InterStageStorage output;
+    private Item item;
+    private double stateTime;
+    private State state;
+    private Map<State, Double> stateStats;
 
     public ProductionStage(String name) {
         this.name = name;
@@ -28,41 +29,63 @@ public class ProductionStage implements ProductionUnit {
         successors = new ArrayList<>();
         input = null;
         output = null;
+        item = null;
         stateStats = new HashMap<>();
         updateState(State.STARVED);
     }
 
+    /**
+     * Production stage consumes an item it wishes to process depending on it's current state.
+     *
+     * @param time current time consume is being called
+     * @return Item to consume
+     */
     public Item consume(double time) {
         switch (state) {
             case IDLE:
             case STARVED:
-                return getNextItem(time);
+                getNextItem(time);
+                break;
             case BLOCKED:
-                if (!output.isFull())
-                    return getNextItem(time);
+                // Check if can unblock
+                if (output == null || !output.isFull())
+                    getNextItem(time);
+                break;
+            case PRODUCING:
+                return null;
         }
-        return null;
+        return item;
     }
 
-    public boolean produce(Item item, double time) {
-        if (output == null) return false;
+    /**
+     * Production stage produces an item it has finished processing.
+     *
+     * @param time
+     * @return
+     */
+    public void produce(double time) {
+        if (output == null || item == null) return;
         updateState(State.IDLE, time);
-        return output.offer(item, time);
+        output.offer(item, time);
+        item = null;
     }
 
-    private Item getNextItem(double time) {
-        Item item;
+    /**
+     *
+     *
+     * @param time
+     */
+    private void getNextItem(double time) {
         if (input == null) {
+            updateState(State.PRODUCING, time);
             item = new Item();
-            //System.out.println("Item["+item.getId()+"] ---- CREATED");
         } else if (input.isEmpty()) {
             updateState(State.STARVED, time);
-            return null;
+            item = null;
         } else {
+            updateState(State.PRODUCING, time);
             item = input.poll(time);
         }
-        updateState(State.PRODUCING, time);
-        return item;
     }
 
     public List<ProductionStage> getPredecessors() {
